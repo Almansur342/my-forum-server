@@ -32,7 +32,28 @@ async function run() {
     const postData = req.body
     const result = await postCollection.insertOne(postData)
     res.send(result)
-  })
+  });
+
+  app.get('/posts', async (req, res) => {
+    const sort = req.query.sort 
+    let options = {}
+    const result = await postCollection.aggregate([
+      {
+        $addFields: {
+          voteDifference: {
+            $subtract: [
+              { $toInt: "$upVote" },
+              { $toInt: "$downVote" }
+            ]
+          }
+        }
+      },
+     
+    ],).toArray();
+    res.send(result);
+  });
+
+
 
   } finally {
     // Ensures that the client will close when you finish/error
