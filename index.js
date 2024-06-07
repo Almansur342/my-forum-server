@@ -35,9 +35,9 @@ async function run() {
   });
 
   app.get('/posts', async (req, res) => {
-    const sort = req.query.sort 
-    let options = {}
-    const result = await postCollection.aggregate([
+    const sort = req.query.sort === 'true'; 
+    console.log(sort);
+    let pipeline = [
       {
         $addFields: {
           voteDifference: {
@@ -47,11 +47,22 @@ async function run() {
             ]
           }
         }
-      },
-     
-    ],).toArray();
+      }
+    ];
+  
+    if (sort) {
+      pipeline.push({
+        $sort: {
+          voteDifference: -1 
+        }
+      });
+    }
+  
+    const result = await postCollection.aggregate(pipeline).toArray();
     res.send(result);
   });
+  
+  
 
 
 
