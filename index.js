@@ -36,7 +36,10 @@ async function run() {
 
   app.get('/posts', async (req, res) => {
     const sort = req.query.sort === 'true'; 
-    console.log(sort);
+    const size = parseInt(req.query.size)
+    const page = parseInt(req.query.page) - 1
+
+    console.log(size,page);
     let pipeline = [
       {
         $addFields: {
@@ -58,12 +61,20 @@ async function run() {
       });
     }
   
-    const result = await postCollection.aggregate(pipeline).toArray();
+    const result = await postCollection.aggregate(pipeline).skip(page*size).limit(size).toArray();
     res.send(result);
   });
-  
-  
 
+
+  app.get('/post-count', async(req,res)=>{
+    const count = await postCollection.countDocuments()
+    res.send({count})
+  })
+  
+  
+  
+  
+  
 
 
   } finally {
