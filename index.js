@@ -37,9 +37,10 @@ async function run() {
   app.get('/posts', async (req, res) => {
     const sort = req.query.sort === 'true'; 
     const size = parseInt(req.query.size)
+    const search= req.query.search
     const page = parseInt(req.query.page) - 1
-
-    console.log(size,page);
+    
+    console.log(size,page,search);
     let pipeline = [
       {
         $addFields: {
@@ -57,6 +58,13 @@ async function run() {
       pipeline.push({
         $sort: {
           voteDifference: -1 
+        }
+      });
+    }
+    if (search) {
+      pipeline.push({
+        $match: {
+          tags_name: { $regex: search, $options: 'i' }
         }
       });
     }
