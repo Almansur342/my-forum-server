@@ -70,6 +70,16 @@ async function run() {
     const count = await postCollection.countDocuments()
     res.send({count})
   })
+
+  app.get('/my-posts/:email', async(req,res)=>{
+    const email = req.params.email
+    console.log(email)
+    const query = {hostEmail:email}
+    const result = await postCollection.find(query).toArray()
+    res.send(result)
+  })
+
+
   
   
   
