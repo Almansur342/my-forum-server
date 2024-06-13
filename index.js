@@ -39,8 +39,7 @@ async function run() {
     const size = parseInt(req.query.size)
     const search= req.query.search
     const page = parseInt(req.query.page) - 1
-    
-    console.log(size,page,search);
+
     let pipeline = [
       {
         $addFields: {
@@ -53,14 +52,7 @@ async function run() {
         }
       }
     ];
-  
-    if (sort) {
-      pipeline.push({
-        $sort: {
-          voteDifference: -1 
-        }
-      });
-    }
+
     if (search) {
       pipeline.push({
         $match: {
@@ -68,7 +60,25 @@ async function run() {
         }
       });
     }
-  
+
+    if (sort) {
+      // console.log('Sorting by vote difference');
+      pipeline.push({
+        $sort: {
+          voteDifference: -1
+        }
+      });
+    } else {
+      // console.log('sorting by newest to oldest');
+      pipeline.push({
+        $sort: {
+          createdAt: -1
+        }
+      });
+    }
+
+   
+
     const result = await postCollection.aggregate(pipeline).skip(page*size).limit(size).toArray();
     res.send(result);
   });
