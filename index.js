@@ -27,7 +27,30 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const postCollection = client.db('forum').collection('posts');
+    const userCollection = client.db('forum').collection('users');
+  
 
+    // save user data
+    app.put('/user', async(req,res)=>{
+      const user = req.body;
+      console.log(user.email)
+      const isExist = await userCollection.findOne({email:user?.email})
+      if(isExist){
+        return res.send(isExist)
+      }
+
+
+      const options = { upsert: true }
+      const query = {email: user?.email}
+      const updateDoc = {
+        $set:{
+          ...user,
+          timestamp: Date.now(),
+        },
+      }
+      const result = await userCollection.updateOne(query,updateDoc,options)
+      res.send(result)
+    })
   app.post('/posts', async(req,res)=>{
     const postData = req.body
     const result = await postCollection.insertOne(postData)
