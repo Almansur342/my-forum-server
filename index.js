@@ -33,13 +33,11 @@ async function run() {
     // save user data
     app.put('/user', async(req,res)=>{
       const user = req.body;
-      console.log(user.email)
+      // console.log(user.email)
       const isExist = await userCollection.findOne({email:user?.email})
       if(isExist){
         return res.send(isExist)
       }
-
-
       const options = { upsert: true }
       const query = {email: user?.email}
       const updateDoc = {
@@ -51,6 +49,20 @@ async function run() {
       const result = await userCollection.updateOne(query,updateDoc,options)
       res.send(result)
     })
+  
+    app.get('/user/:email', async(req,res)=>{
+      const email = req.params.email
+      // console.log(email)
+      const query = {email:email}
+      const result = await userCollection.findOne(query)
+      res.send(result)
+    })
+  
+
+
+
+
+
   app.post('/posts', async(req,res)=>{
     const postData = req.body
     const result = await postCollection.insertOne(postData)
