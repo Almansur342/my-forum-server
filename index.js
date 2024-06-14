@@ -56,6 +56,14 @@ async function run() {
       const query = {email:email}
       const result = await userCollection.findOne(query)
       res.send(result)
+    });
+
+    app.get('/user_rol/:email', async(req,res)=>{
+      const email = req.params.email
+      // console.log(email)
+      const query = {email:email}
+      const result = await userCollection.findOne(query)
+      res.send(result)
     })
   
     app.get('/three-posts', async(req,res)=>{
