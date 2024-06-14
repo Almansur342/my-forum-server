@@ -58,6 +58,22 @@ async function run() {
       res.send(result)
     });
 
+    app.get('/users', async(req,res)=>{
+      const result = await userCollection.find().toArray()
+      res.send(result)
+    })
+
+    app.patch('/user/update/:email', async(req,res)=>{
+      const email = req.params.email;
+      const user = req.body
+      const query = {email}
+      const updateDoc = {
+        $set:{...user,timestamp: Date.now()}
+      }
+      const result = await userCollection.updateOne(query, updateDoc)
+      res.send(result)
+    })
+
     app.get('/user_rol/:email', async(req,res)=>{
       const email = req.params.email
       // console.log(email)
@@ -138,7 +154,7 @@ async function run() {
 
   app.get('/my-posts/:email', async(req,res)=>{
     const email = req.params.email
-    console.log(email)
+    // console.log(email)
     const query = {hostEmail:email}
     const result = await postCollection.find(query).toArray()
     res.send(result)
