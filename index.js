@@ -58,6 +58,10 @@ async function run() {
       res.send(result)
     })
   
+    app.get('/three-posts', async(req,res)=>{
+      const result = await postCollection.find().sort({ createdAt: -1 }).limit(3).toArray();
+      res.send(result);
+    })
 
 
 
