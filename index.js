@@ -30,6 +30,7 @@ async function run() {
     const postCollection = client.db('forum').collection('posts');
     const userCollection = client.db('forum').collection('users');
 
+
     //jwt
     app.post('/jwt', async(req,res)=>{
       const user = req.body;
@@ -39,12 +40,12 @@ async function run() {
 
     // middlewares 
     const verifyToken = (req,res,next)=>{
-      console.log('inside verify token',req.headers.authorization);
+      // console.log('inside verify token',req.headers.authorization);
       if(!req.headers.authorization){
        return res.status(401).send({message: 'forbidden access'})
       }
       const token = req.headers.authorization.split(' ')[1]
-      console.log(token)
+      // console.log(token)
       jwt.verify(token,process.env.ACCESS_TOKEN_SECERT, (err, decoded)=>{
         if(err){
           return res.status(401).send({message: 'forbidden access'})
@@ -56,6 +57,32 @@ async function run() {
       })
       // next()
     } 
+
+    
+    // verify admin middlewares
+    const verifyAdmin = async(req,res,next)=>{
+      const user = req.decoded
+      console.log('hello',user)
+      const query = {email: user?.email}
+      const result = await userCollection.findOne(query)
+      if(!result || result?.role !== 'admin'){
+        return res.status(401).send({message:'Unauthorized access!!'})
+      }
+      next()
+    }
+
+    // verify host middlewares
+    const verifyHost = async(req,res,next)=>{
+      const user = req.decoded
+      
+      console.log('hello',user)
+      const query = {email: user?.email}
+      const result = await userCollection.findOne(query)
+      if(!result || result?.role !== 'host'){
+        return res.status(401).send({message:'Unauthorized access!!'})
+      }
+      next()
+    }
 
     // save user data
     app.put('/user', async (req, res) => {
@@ -79,7 +106,7 @@ async function run() {
     })
 
 
-    app.get('/user/:email', verifyToken, async (req, res) => {
+    app.get('/user/:email', verifyToken, verifyHost, async (req, res) => {
       const email = req.params.email
       // console.log(email)
       const query = { email: email }
@@ -87,7 +114,7 @@ async function run() {
       res.send(result)
     });
 
-    app.get('/users', verifyToken, async (req, res) => {
+    app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
       const result = await userCollection.find().toArray()
       res.send(result)
     })
@@ -119,7 +146,7 @@ async function run() {
       res.send(result)
     })
 
-    app.get('/three-posts/:email', async (req, res) => {
+    app.get('/three-posts/:email', verifyToken, verifyHost, async (req, res) => {
       const email = req.params.email
       const query = { hostEmail: email }
       const result = await postCollection.find(query).sort({ createdAt: -1 }).limit(3).toArray();
@@ -197,7 +224,7 @@ async function run() {
       res.send(result)
     })
 
-    app.delete('/deletePost/:id', verifyToken, async (req, res) => {
+    app.delete('/deletePost/:id', verifyToken, verifyHost, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
       const result = await postCollection.deleteOne(query)
