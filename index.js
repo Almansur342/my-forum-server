@@ -231,6 +231,53 @@ async function run() {
       res.send(result)
     })
 
+    app.get('/postDetails/:id', async (req, res) => {
+      const id = req.params.id
+      const query = { _id: new ObjectId(id) }
+      const result = await postCollection.findOne(query)
+      res.send(result)
+    })
+
+
+app.patch('/posts/vote/:id', async (req, res) => {
+  const postId = req.params.id;
+  const { email, voteType } = req.body; 
+  
+  try {
+    const post = await postCollection.findOne({ _id: new ObjectId(postId) });
+    if (!post) {
+      return res.status(404).send({ message: 'Post not found.' });
+    }
+
+    const userVotes = post.userVotes || {};
+    if (userVotes[email] && userVotes[email][voteType]) {
+      return res.status(403).send({ message: `You have already ${voteType === 'upVote' ? 'up voted' : 'down voted'} this post.` });
+    }
+
+    if (!userVotes[email]) {
+      userVotes[email] = { upVote: false, downVote: false };
+    }
+
+    userVotes[email][voteType] = true;
+    const updateDoc = {
+      $set: { userVotes }
+    };
+
+    if (voteType === 'upVote') {
+      updateDoc.$inc = { upVote: 1 };
+    } else if (voteType === 'downVote') {
+      updateDoc.$inc = { downVote: 1 };
+    }
+
+    const query = { _id: new ObjectId(postId) };
+    const result = await postCollection.updateOne(query, updateDoc);
+
+  } catch (error) {
+    console.error('Error processing vote:', error);
+    res.status(500).send({ message: 'An error occurred while processing your vote.' });
+  }
+});
+
 
 
 
