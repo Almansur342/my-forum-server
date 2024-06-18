@@ -29,6 +29,7 @@ async function run() {
   try {
     const postCollection = client.db('forum').collection('posts');
     const userCollection = client.db('forum').collection('users');
+    const commentCollection = client.db('forum').collection('comments');
 
 
     //jwt
@@ -62,7 +63,7 @@ async function run() {
     // verify admin middlewares
     const verifyAdmin = async(req,res,next)=>{
       const user = req.decoded
-      console.log('hello',user)
+      // console.log('hello',user)
       const query = {email: user?.email}
       const result = await userCollection.findOne(query)
       if(!result || result?.role !== 'admin'){
@@ -164,6 +165,7 @@ async function run() {
     });
 
     app.get('/posts', async (req, res) => {
+
       const sort = req.query.sort === 'true';
       const size = parseInt(req.query.size)
       const search = req.query.search
@@ -239,7 +241,7 @@ async function run() {
     })
 
 
-app.patch('/posts/vote/:id', async (req, res) => {
+  app.patch('/posts/vote/:id', async (req, res) => {
   const postId = req.params.id;
   const { email, voteType } = req.body; 
   
@@ -271,12 +273,21 @@ app.patch('/posts/vote/:id', async (req, res) => {
 
     const query = { _id: new ObjectId(postId) };
     const result = await postCollection.updateOne(query, updateDoc);
+    res.send({ message: 'Vote registered successfully' });
 
   } catch (error) {
-    console.error('Error processing vote:', error);
+    // console.error('Error processing vote:', error);
+
     res.status(500).send({ message: 'An error occurred while processing your vote.' });
   }
 });
+
+
+app.post('/comment', async(req,res)=>{
+ const commentData = req.body
+ const result = await commentCollection.insertOne(commentData)
+ res.send(result)
+})
 
 
 
