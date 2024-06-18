@@ -289,6 +289,14 @@ app.post('/comment', async(req,res)=>{
  res.send(result)
 })
 
+app.get('/allComments/:post_title', async(req,res)=>{
+  const post_title = req.params.post_title
+  console.log(post_title)
+  const query = { post_title: post_title }
+      const result = await commentCollection.find(query).toArray()
+      res.send(result)
+})
+
 
 
 
