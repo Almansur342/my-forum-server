@@ -120,7 +120,8 @@ async function run() {
       res.send(result)
     })
 
-   app.patch('/user/update/:email', verifyToken, async (req, res) => {
+
+ app.patch('/user/update/:email', verifyToken, async (req, res) => {
   const email = req.params.email;
   const user = req.body;
  
@@ -153,8 +154,6 @@ async function run() {
       const result = await postCollection.find(query).sort({ createdAt: -1 }).limit(3).toArray();
       res.send(result);
     })
-
-
 
 
 
@@ -297,7 +296,7 @@ app.get('/allComments/:post_title', async(req,res)=>{
       res.send(result)
 })
 
-app.patch('/reportComment/:id', verifyToken, async (req, res) => {
+app.patch('/reportComment/:id', verifyToken, verifyHost, async (req, res) => {
   const id = req.params.id;
   const { reason } = req.body;
   console.log(reason)
@@ -317,7 +316,7 @@ app.patch('/reportComment/:id', verifyToken, async (req, res) => {
   }
 });
 
-app.get('/reportComment', async (req, res) => {
+app.get('/reportComment', verifyToken,verifyAdmin, async (req, res) => {
   try {
     const result = await commentCollection.find({ reports: { $exists: true, $not: { $size: 0 } } }).toArray();
     res.send(result);
@@ -333,6 +332,45 @@ app.delete('/deleteComment/:id', verifyToken, verifyAdmin, async (req,res) =>{
   const result = await commentCollection.deleteOne(query)
   res.send(result)
 })
+
+
+app.patch('/ignoreReport/:id', verifyToken, verifyAdmin, async (req, res) => {
+  const id = req.params.id;
+  try {
+    const result = await commentCollection.updateOne({ _id: new ObjectId(id) }, { $set: { reports: [] } });
+    if (result.modifiedCount === 1) {
+      res.send({ message: 'Report ignored successfully' });
+    } else {
+      res.status(404).send({ message: 'Comment not found' });
+    }
+  } catch (error) {
+    console.error('Error ignoring report:', error);
+    res.status(500).send({ message: 'An error occurred while ignoring the report' });
+  }
+});
+
+
+app.patch('/warning/:id', verifyToken, verifyAdmin, async (req, res) => {
+  const id = req.params.id;
+  const warning = {
+    message: "Inappropriate content",
+    timestamp: new Date()
+  };
+  try {
+    const result = await commentCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $push: { warnings: warning } }
+    );
+    if (result.modifiedCount === 1) {
+      res.send({ message: 'Warning issued successfully' });
+    } else {
+      res.status(404).send({ message: 'Comment not found' });
+    }
+  } catch (error) {
+    console.error('Error issuing warning:', error);
+    res.status(500).send({ message: 'An error occurred while issuing the warning' });
+  }
+});
 
   } finally {
     // Ensures that the client will close when you finish/error
