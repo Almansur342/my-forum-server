@@ -317,8 +317,22 @@ app.patch('/reportComment/:id', verifyToken, async (req, res) => {
   }
 });
 
+app.get('/reportComment', async (req, res) => {
+  try {
+    const result = await commentCollection.find({ reports: { $exists: true, $not: { $size: 0 } } }).toArray();
+    res.send(result);
+  } catch (error) {
+    console.error('Error fetching reported comments:', error);
+    res.status(500).send({ message: 'An error occurred while fetching reported comments' });
+  }
+});
 
-
+app.delete('/deleteComment/:id', verifyToken, verifyAdmin, async (req,res) =>{
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) }
+  const result = await commentCollection.deleteOne(query)
+  res.send(result)
+})
 
   } finally {
     // Ensures that the client will close when you finish/error
