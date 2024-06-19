@@ -297,6 +297,26 @@ app.get('/allComments/:post_title', async(req,res)=>{
       res.send(result)
 })
 
+app.patch('/reportComment/:id', verifyToken, async (req, res) => {
+  const id = req.params.id;
+  const { reason } = req.body;
+  console.log(reason)
+  const report = { reason, timestamp: new Date() };
+  try {
+    const query = { _id: new ObjectId(id) };
+    const updateDoc = { $push: { reports: report } };
+    const result = await commentCollection.updateOne(query, updateDoc);
+    if (result.modifiedCount === 1) {
+      res.send({ message: 'Comment reported successfully' });
+    } else {
+      res.status(404).send({ message: 'Comment not found' });
+    }
+  } catch (error) {
+    console.error('Error reporting comment:', error);
+    res.status(500).send({ message: 'An error occurred while reporting the comment' });
+  }
+});
+
 
 
 
