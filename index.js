@@ -32,6 +32,7 @@ async function run() {
     const userCollection = client.db('forum').collection('users');
     const commentCollection = client.db('forum').collection('comments');
     const bookingCollection = client.db('forum').collection('bookings');
+    const announcementsCollection = client.db('forum').collection('announcements');
 
 
     //jwt
@@ -439,6 +440,17 @@ app.get('/userBadge', verifyToken, async (req, res) => {
     res.status(500).send({ message: 'Internal Server Error', error });
   }
 });
+
+app.post('/announcements', verifyToken, async (req, res) => {
+  const announcementData = req.body
+  const result = await announcementsCollection.insertOne(announcementData)
+  res.send(result)
+})
+
+app.get('/allAnnounce', async (req, res) => {
+  const result = await announcementsCollection.find().toArray()
+  res.send(result)
+})
 
 
 
