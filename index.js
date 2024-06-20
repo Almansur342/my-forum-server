@@ -3,6 +3,7 @@ const cors = require('cors')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const jwt = require('jsonwebtoken')
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 const port = process.env.PORT || 5000
 
 const app = express()
@@ -30,6 +31,7 @@ async function run() {
     const postCollection = client.db('forum').collection('posts');
     const userCollection = client.db('forum').collection('users');
     const commentCollection = client.db('forum').collection('comments');
+    const bookingCollection = client.db('forum').collection('bookings');
 
 
     //jwt
@@ -84,6 +86,29 @@ async function run() {
       }
       next()
     }
+
+   
+
+     //create-payment-intent 
+     app.post('/create-payment-intent', verifyToken, async(req,res)=>{
+      const price = req.body.price
+      const priceInCent = parseFloat(price) * 100
+      if(!price || priceInCent < 1) return
+
+    // generate client secret
+      const {client_secret} = await stripe.paymentIntents.create({
+        amount: priceInCent,
+        currency: "cad",
+        // In the latest version of the API, specifying the `automatic_payment_methods` parameter is optional because Stripe enables its functionality by default.
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      })
+
+      
+      // send client secret as response
+      res.send({clientSecret: client_secret})
+     })
 
     // save user data
     app.put('/user', async (req, res) => {
@@ -371,6 +396,38 @@ app.patch('/warning/:id', verifyToken, verifyAdmin, async (req, res) => {
     res.status(500).send({ message: 'An error occurred while issuing the warning' });
   }
 });
+
+// save bookings
+ app.post('/booking', verifyToken, async (req, res) => {
+  const bookingData = req.body
+  // save room booking data
+  const result = await bookingCollection.insertOne(bookingData)
+  res.send(result)
+});
+
+app.patch('/userBadge', verifyToken, async (req, res) => {
+  const userEmail = req.body.email;
+
+  try {
+    const result = await userCollection.updateOne(
+      { email: userEmail },
+      { $set: { badge: 'Gold' } }
+    );
+
+    if (result.modifiedCount > 0) {
+      res.status(200).send({ message: 'Badge updated to Gold' });
+    } else {
+      res.status(400).send({ message: 'Failed to update badge' });
+    }
+  } catch (error) {
+    res.status(500).send({ message: 'Internal Server Error', error });
+  }
+});
+
+
+
+
+
 
   } finally {
     // Ensures that the client will close when you finish/error
