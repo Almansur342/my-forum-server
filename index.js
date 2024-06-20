@@ -78,7 +78,7 @@ async function run() {
     const verifyHost = async(req,res,next)=>{
       const user = req.decoded
       
-      console.log('hello',user)
+      // console.log('hello',user)
       const query = {email: user?.email}
       const result = await userCollection.findOne(query)
       if(!result || result?.role !== 'host'){
@@ -182,7 +182,7 @@ async function run() {
 
 
 
-    app.post('/posts', async (req, res) => {
+    app.post('/posts', verifyToken, async (req, res) => {
       const postData = req.body
       const result = await postCollection.insertOne(postData)
       res.send(result)
@@ -418,6 +418,22 @@ app.patch('/userBadge', verifyToken, async (req, res) => {
       res.status(200).send({ message: 'Badge updated to Gold' });
     } else {
       res.status(400).send({ message: 'Failed to update badge' });
+    }
+  } catch (error) {
+    res.status(500).send({ message: 'Internal Server Error', error });
+  }
+});
+
+
+app.get('/userBadge', verifyToken, async (req, res) => {
+  const userEmail = req.query.email;
+
+  try {
+    const user = await userCollection.findOne({ email: userEmail });
+    if (user) {
+      res.status(200).send({ badge: user.badge });
+    } else {
+      res.status(404).send({ message: 'User not found' });
     }
   } catch (error) {
     res.status(500).send({ message: 'Internal Server Error', error });
