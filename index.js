@@ -452,6 +452,16 @@ app.get('/allAnnounce', async (req, res) => {
   res.send(result)
 })
 
+app.get('/admin-profile', async (req, res) => {
+  const result = await userCollection.findOne({ role: 'admin' }); 
+  res.send(result); 
+});
+
+app.get('/comment-count', async (req, res) => {
+  const count = await commentCollection.countDocuments()
+  res.send({ count })
+});
+
 
 
 
