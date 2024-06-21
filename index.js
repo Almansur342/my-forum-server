@@ -33,6 +33,7 @@ async function run() {
     const commentCollection = client.db('forum').collection('comments');
     const bookingCollection = client.db('forum').collection('bookings');
     const announcementsCollection = client.db('forum').collection('announcements');
+    const tagsCollection = client.db('forum').collection('tags');
 
 
     //jwt
@@ -458,12 +459,25 @@ app.get('/admin-profile', async (req, res) => {
 });
 
 app.get('/comment-count', async (req, res) => {
-  const count = await commentCollection.countDocuments()
-  res.send({ count })
+  const result = await commentCollection.find().toArray()
+  res.send(result)
 });
 
+app.get('/postCount', async (req, res) => {
+  const result = await postCollection.find().toArray()
+  res.send(result)
+});
 
+app.post('/tags', verifyToken, verifyAdmin, async (req, res) => {
+  const tag = req.body;
+  const result = await tagsCollection.insertOne(tag);
+  res.send(result);
+});
 
+app.get('/tags', async (req, res) => {
+  const result = await tagsCollection.find().toArray()
+  res.send(result)
+})
 
 
 
