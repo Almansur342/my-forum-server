@@ -9,7 +9,10 @@ const port = process.env.PORT || 5000
 const app = express()
 
 const corsOptions = {
-  origin: ['http://localhost:5173'],
+  origin: [
+    "http://localhost:5173",
+    "https://6676848b769ada53d958df19--heroic-kelpie-0a51f0.netlify.app",
+  ],
   credentials: true,
   optionSuccessStatus: 200,
 }
@@ -310,7 +313,7 @@ async function run() {
     res.send({ message: 'Vote registered successfully' });
 
   } catch (error) {
-    // console.error('Error processing vote:', error);
+    
 
     res.status(500).send({ message: 'An error occurred while processing your vote.' });
   }
@@ -412,7 +415,7 @@ app.patch('/warning/:id', verifyToken, verifyAdmin, async (req, res) => {
       res.status(404).send({ message: 'Comment not found' });
     }
   } catch (error) {
-    console.error('Error issuing warning:', error);
+    // console.error('Error issuing warning:', error);
     res.status(500).send({ message: 'An error occurred while issuing the warning' });
   }
 });
