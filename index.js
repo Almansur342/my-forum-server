@@ -143,7 +143,9 @@ async function run() {
     });
 
     app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
-      const result = await userCollection.find().toArray()
+      const size = parseInt(req.query.size)
+      const page = parseInt(req.query.page) - 1
+      const result = await userCollection.find().skip(page * size).limit(size).toArray()
       res.send(result)
     })
 
@@ -240,15 +242,21 @@ async function run() {
 
 
     app.get('/post-count', async (req, res) => {
-      const count = await postCollection.countDocuments()
+      const search = req.query.search
+      let query = {
+        tags_name: { $regex: search, $options: 'i' }
+      }
+      const count = await postCollection.countDocuments(query)
       res.send({ count })
     })
 
     app.get('/my-posts/:email', verifyToken, async (req, res) => {
       const email = req.params.email
+      const size = parseInt(req.query.size)
+      const page = parseInt(req.query.page) - 1
       // console.log(email)
       const query = { hostEmail: email }
-      const result = await postCollection.find(query).toArray()
+      const result = await postCollection.find(query).skip(page * size).limit(size).toArray()
       res.send(result)
     })
 
@@ -317,7 +325,15 @@ app.post('/comment', async(req,res)=>{
 
 app.get('/allComments/:post_title', async(req,res)=>{
   const post_title = req.params.post_title
+  const size = parseInt(req.query.size)
+  const page = parseInt(req.query.page) - 1
   // console.log(post_title)
+  const query = { post_title: post_title }
+      const result = await commentCollection.find(query).skip(page * size).limit(size).toArray()
+      res.send(result)
+})
+app.get('/myCommentsCount/:post_title', async(req,res)=>{
+  const post_title = req.params.post_title
   const query = { post_title: post_title }
       const result = await commentCollection.find(query).toArray()
       res.send(result)
@@ -344,8 +360,10 @@ app.patch('/reportComment/:id', verifyToken, verifyHost, async (req, res) => {
 });
 
 app.get('/reportComment', verifyToken,verifyAdmin, async (req, res) => {
+     const size = parseInt(req.query.size)
+      const page = parseInt(req.query.page) - 1
   try {
-    const result = await commentCollection.find({ reports: { $exists: true, $not: { $size: 0 } } }).toArray();
+    const result = await commentCollection.find({ reports: { $exists: true, $not: { $size: 0 } } }).skip(page * size).limit(size).toArray();
     res.send(result);
   } catch (error) {
     console.error('Error fetching reported comments:', error);
@@ -451,6 +469,14 @@ app.post('/announcements', verifyToken, async (req, res) => {
 app.get('/allAnnounce', async (req, res) => {
   const result = await announcementsCollection.find().toArray()
   res.send(result)
+})
+app.get('/userCount', async (req, res) => {
+  const result = await userCollection.find().toArray()
+  res.send(result)
+})
+app.get('/reportCommentCount', async (req, res) => {
+  const result = await commentCollection.find({ reports: { $exists: true, $not: { $size: 0 } } }).toArray();
+  res.send(result);
 })
 
 app.get('/admin-profile', async (req, res) => {
